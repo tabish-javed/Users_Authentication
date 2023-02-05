@@ -5,9 +5,11 @@ const db = require('../data/database');
 
 const router = express.Router();
 
+
 router.get('/', function (req, res) {
     res.render('welcome');
 });
+
 
 router.get('/signup', function (req, res) {
     let sessionInputData = req.session.inputData
@@ -23,9 +25,11 @@ router.get('/signup', function (req, res) {
     res.render('signup', { inputData: sessionInputData });
 });
 
+
 router.get('/login', function (req, res) {
     res.render('login');
 });
+
 
 router.post('/signup', async function (req, res) {
     // Get user data from request body
@@ -43,7 +47,7 @@ router.post('/signup', async function (req, res) {
         enteredEmail != enteredConfirmEmail ||
         !enteredEmail.includes("@")
     ) {
-        // Saving user temporary data to session, validation fails
+        // Saving user temporary data to session, when validation fails
         req.session.inputData = {
             hasError: true,
             message: "Invalid input - please check your data",
@@ -73,11 +77,22 @@ router.post('/signup', async function (req, res) {
         email: enteredEmail,
         password: hashedPassword,
     }
-    // Save user data (email and password as above) in the database
+    // Save user data (email and password) in the database
     await db.getDb().collection("users").insertOne(user)
-    // Then redirect user to "login" route
-    res.redirect("/login")
+
+    // Clear temporary session user's data (email(s) and passwords)
+    req.session.inputData = {
+        email: "",
+        confirmEmail: "",
+        password: ""
+    }
+    // Save nullify session data to database
+    req.session.save(function () {
+        // Then redirect user to "login" route
+        res.redirect("/login")
+    })
 });
+
 
 // User logon route to allow user to authenticate.
 router.post('/login', async function (req, res) {
@@ -90,14 +105,14 @@ router.post('/login', async function (req, res) {
     const existingUser = await db.getDb().collection("users").findOne({ email: enteredEmail })
     // And if user's email doesn't exists/registered in database, redirect to login again
     if (!existingUser) {
-        console.log("User doesn't exists")
+        console.log("This email isn't registered with us")
         return res.redirect("/login")
     }
     // Otherwise, check if user's parsed password is same as in our database
     const passwordsAreEqual = await bcrypt.compare(enteredPassword, existingUser.password)
     // If password isn't equal to the one stored in database, redirect to login again
     if (!passwordsAreEqual) {
-        console.log("Could not log in - passwords are not equal")
+        console.log("Could not log in - incorrect password")
         return res.redirect("/login")
     }
     // Add data to session
@@ -110,6 +125,7 @@ router.post('/login', async function (req, res) {
     console.log("User is authenticated")
 });
 
+
 router.get('/admin', function (req, res) {
     if (!req.session.isAuthenticated) { // if (!req.session.user)
         return res.status(401).render("401")
@@ -117,10 +133,14 @@ router.get('/admin', function (req, res) {
     res.render('admin');
 });
 
+
 router.post('/logout', function (req, res) {
     req.session.user = null
     req.session.isAuthenticated = false
-    res.redirect("/")
+    req.session.save(function () {
+        res.redirect("/")
+    })
 });
+
 
 module.exports = router;
