@@ -79,12 +79,20 @@ router.post('/login', async function (req, res) {
         console.log("Could not log in - passwords are not equal")
         return res.redirect("/login")
     }
+
+    // Add data to session
+    req.session.user = { id: existingUser._id, email: existingUser.email }
+    req.session.isAuthenticated = true
+    req.session.save(function () {
+        res.redirect("/admin")
+    })
+
     // Finally user get authenticated, passing all above conditions
     console.log("User is authenticated")
-    res.redirect("/admin")
 });
 
 router.get('/admin', function (req, res) {
+    // check the user "ticket"
     res.render('admin');
 });
 
