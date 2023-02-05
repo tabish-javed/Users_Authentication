@@ -10,7 +10,17 @@ router.get('/', function (req, res) {
 });
 
 router.get('/signup', function (req, res) {
-    res.render('signup');
+    let sessionInputData = req.session.inputData
+
+    if (!sessionInputData) {
+        sessionInputData = {
+            hasError: false,
+            email: "",
+            confirmEmail: "",
+            password: ""
+        }
+    }
+    res.render('signup', { inputData: sessionInputData });
 });
 
 router.get('/login', function (req, res) {
@@ -33,9 +43,20 @@ router.post('/signup', async function (req, res) {
         enteredEmail != enteredConfirmEmail ||
         !enteredEmail.includes("@")
     ) {
-        // If any of condition above doesn't meet, then redirect user back to "signup" page
-        console.log("Incorrect data")
-        return res.redirect("/signup")
+        // Saving user temporary data to session, validation fails
+        req.session.inputData = {
+            hasError: true,
+            message: "Invalid input - please check your data",
+            email: enteredEmail,
+            confirmEmail: enteredConfirmEmail,
+            password: enteredPassword
+        }
+        // If any of condition above doesn't meet, then redirect user back to "signup" page.
+        // But before redirecting user; Save session data to session Database.
+        req.session.save(function () {
+            res.redirect("/signup")
+        })
+        return
     }
     // Check if we already have the email registered in our database
     const existingUser = await db.getDb().collection("users").findOne({ email: enteredEmail })
@@ -54,7 +75,7 @@ router.post('/signup', async function (req, res) {
     }
     // Save user data (email and password as above) in the database
     await db.getDb().collection("users").insertOne(user)
-
+    // Then redirect user to "login" route
     res.redirect("/login")
 });
 
@@ -79,23 +100,27 @@ router.post('/login', async function (req, res) {
         console.log("Could not log in - passwords are not equal")
         return res.redirect("/login")
     }
-
     // Add data to session
     req.session.user = { id: existingUser._id, email: existingUser.email }
     req.session.isAuthenticated = true
     req.session.save(function () {
         res.redirect("/admin")
     })
-
     // Finally user get authenticated, passing all above conditions
     console.log("User is authenticated")
 });
 
 router.get('/admin', function (req, res) {
-    // check the user "ticket"
+    if (!req.session.isAuthenticated) { // if (!req.session.user)
+        return res.status(401).render("401")
+    }
     res.render('admin');
 });
 
-router.post('/logout', function (req, res) { });
+router.post('/logout', function (req, res) {
+    req.session.user = null
+    req.session.isAuthenticated = false
+    res.redirect("/")
+});
 
 module.exports = router;

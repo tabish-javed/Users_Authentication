@@ -32,7 +32,10 @@ app.use(session({
     secret: "fynmaw-gawwy0-zuMmid",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore
+    store: sessionStore,
+    cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000
+    }
 }))
 
 app.use(demoRoutes);
