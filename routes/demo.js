@@ -169,12 +169,19 @@ router.post('/login', async function (req, res) {
 });
 
 
-router.get('/admin', async function (req, res) {
-    if (!req.session.isAuthenticated) { // if (!req.session.user)
+router.get('/admin', function (req, res) { // "async" keyword removed - no async operations in this function.
+    // if (!req.session.isAuthenticated) { // Code commented out to use global variable -
+    // - provided by middleware function in app.js
+    if (!res.locals.isAuth) {
+        // We can also check using; if (!req.session.user)
         return res.status(401).render("401")
     }
-    const user = await db.getDb().collection("users").findOne({ _id: req.session.user.id })
-    if (!user || !user.isAdmin) {
+
+    // const user = await db.getDb().collection("users").findOne({ _id: req.session.user.id })
+
+    // if (!user || !user.isAdmin) { // Code commented out to use global variable -
+    // - provided by middleware function in app.js
+    if (!res.locals.isAdmin) {
         return res.status(403).render("403")
     }
     res.render('admin');
@@ -182,7 +189,10 @@ router.get('/admin', async function (req, res) {
 
 
 router.get('/profile', function (req, res) {
-    if (!req.session.isAuthenticated) { // if (!req.session.user)
+    // if (!req.session.isAuthenticated) { // Code commented out to use global variable -
+    // - provided by middleware function in app.js
+    // We can also check using; if (!req.session.user)
+    if (!res.locals.isAuth) {
         return res.status(401).render("401")
     }
     res.render('profile');

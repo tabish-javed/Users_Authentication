@@ -38,6 +38,7 @@ app.use(session({
     }
 }))
 
+// CUSTOM MIDDLEWARE - Used to have global variable across all EJS templates and further routes.
 app.use(async function (req, res, next) {
     const user = req.session.user
     const isAuth = req.session.isAuthenticated
@@ -54,6 +55,7 @@ app.use(async function (req, res, next) {
 
     next()
 })
+
 
 app.use(demoRoutes);
 
