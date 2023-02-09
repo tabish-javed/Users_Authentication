@@ -162,11 +162,10 @@ router.post('/login', async function (req, res) {
     // Add data to session
     req.session.user = { id: existingUser._id, email: existingUser.email }
     req.session.isAuthenticated = true
+    // Finally redirect user after saving session
     req.session.save(function () {
         res.redirect("/profile")
     })
-    // Finally user get authenticated, passing all above conditions
-    console.log("User is authenticated")
 });
 
 
