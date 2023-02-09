@@ -22,6 +22,10 @@ router.get('/signup', function (req, res) {
             password: ""
         }
     }
+
+    // Clear previous session data before rendering signup page
+    req.session.inputData = null
+    // Render the signup page and parse session data if any to the page.
     res.render('signup', { inputData: sessionInputData });
 });
 
@@ -80,17 +84,18 @@ router.post('/signup', async function (req, res) {
     // Save user data (email and password) in the database
     await db.getDb().collection("users").insertOne(user)
 
-    // Clear temporary session user's data (email(s) and passwords)
-    req.session.inputData = {
-        email: "",
-        confirmEmail: "",
-        password: ""
-    }
-    // Save nullify session data to database
-    req.session.save(function () {
-        // Then redirect user to "login" route
-        res.redirect("/login")
-    })
+    // // Clear temporary session user's data (email(s) and passwords)
+    // req.session.inputData = {
+    //     email: "",
+    //     confirmEmail: "",
+    //     password: ""
+    // }
+    // // Save nullify session data to database
+    // req.session.save(function () {
+    //     // Then redirect user to "login" route
+    //     res.redirect("/login")
+    // })
+    res.redirect("/login")
 });
 
 
