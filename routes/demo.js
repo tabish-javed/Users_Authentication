@@ -105,7 +105,7 @@ router.post('/login', async function (req, res) {
     const existingUser = await db.getDb().collection("users").findOne({ email: enteredEmail })
     // And if user's email doesn't exists/registered in database, redirect to login again
     if (!existingUser) {
-        console.log("This email isn't registered with us")
+        console.log("This email address isn't registered with us")
         return res.redirect("/login")
     }
     // Otherwise, check if user's parsed password is same as in our database
@@ -137,6 +137,7 @@ router.get('/admin', function (req, res) {
 router.post('/logout', function (req, res) {
     req.session.user = null
     req.session.isAuthenticated = false
+    // Save above values to session
     req.session.save(function () {
         res.redirect("/")
     })
